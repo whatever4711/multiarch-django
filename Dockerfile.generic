@@ -1,0 +1,31 @@
+FROM <IMAGE>
+<QEMU>
+
+ARG BUILD_DATE
+ARG VCS_REF
+ARG VCS_URL
+ARG VERSION
+
+ENV ARCH <ARCH>
+
+# Problem with dockerize on AARCH64, need to use armhf-version
+RUN BUILD_DEPS="ca-certificates wget musl-dev linux-headers g++ libpng-dev freetype-dev python3-dev" && \
+    DOCKERIZE_ARCH=$(echo "${ARCH}" | sed -e "s/aarch64/armhf/g") && \
+    apk add --update --no-cache libxslt-dev ${BUILD_DEPS} && \
+    pip install --no-cache-dir Django django-compressor django_extensions psycopg2 requests dj-database-url python-decouple gunicorn eventlet lxml && \
+    apk del ${BUILD_DEPS}
+
+WORKDIR /usr/src/app
+
+
+ENTRYPOINT ["tini", "--", "python3"]
+
+LABEL org.label-schema.version=$VERSION \
+    org.label-schema.name="Python" \
+    org.label-schema.vcs-ref=$VCS_REF \
+    org.label-schema.vcs-url=$VCS_URL \
+    org.label-schema.build-date=$BUILD_DATE \
+    org.label-schema.schema-version="1.0" \
+    org.label-schema.docker.cmd="docker run  whatever4711/python:amd64-latest" \
+    org.label-schema.vendor="Marcel Grossmann" \
+    org.label-schema.architecture=$ARCH
